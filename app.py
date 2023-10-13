@@ -10,10 +10,11 @@ import datetime
 # from win10toast import ToastNotifier
 from HGGS_detector import *
 from Vest_detector import *
+from flask_cors import CORS
 import sqlite3
 
 app = Flask(__name__)
-
+cors = CORS(app)
 # Configuration for your SQLite database
 DATABASE = 'demoSQL.db'  # Change 'your_database.db' to your desired database name
 app.config['DATABASE'] = DATABASE
@@ -212,38 +213,57 @@ def ppe_detection():
             not_Detected = [i for i in classes if i not in detected_items]
             if not_Detected:
                 try:
-                    alert_message = 'ALERT'
-                    response = requests.post(callback_url, data={'alert_message': alert_message})
-                    if response.status_code == 200:
-                        # If the response status code is 200, redirect to another URL in the browser
-                        # return render_template('index.html', redirect_url='https://example.com/success')
-                        # return render_template('index.html', redirect_url='http://127.0.0.1:5000/callback')
+                    print('callback_url', callback_url)
+                    data_to_insert = [
+                        ('http://example.com/movie1', frame_cnt, 'movie-1-slug'),
+                    ]
+                    print('JEWELLS', frame_cnt)
+                    db = get_db()
+                    db.execute('''
+                        CREATE TABLE IF NOT EXISTS movie (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            link TEXT NOT NULL,
+                            frames INTEGER NOT NULL,
+                            slug TEXT NOT NULL
+                        )
+                    ''')
+                    cursor = db.cursor()
+                    for row in data_to_insert:
+                        cursor.execute("INSERT INTO movie (link, frames, slug) VALUES (?, ?, ?)", row)
+                    db.commit()
+                    # I HAVE COMMENTED OUT BECAUSE WE HAVE USED DYNAMIC URL
+                    
+                    # response = requests.post(callback_url, data={'alert_message': alert_message})
+                    # if response.status_code == 200:
+                    #     # If the response status code is 200, redirect to another URL in the browser
+                    #     # return render_template('index.html', redirect_url='https://example.com/success')
+                    #     # return render_template('index.html', redirect_url='http://127.0.0.1:5000/callback')
 
-                        data_to_insert = [
-                            ('http://example.com/movie1', frame_cnt, 'movie-1-slug'),
-                        ]
-                        print('JEWELLS', frame_cnt)
-                        db = get_db()
-                        db.execute('''
-                            CREATE TABLE IF NOT EXISTS movie (
-                                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                link TEXT NOT NULL,
-                                frames INTEGER NOT NULL,
-                                slug TEXT NOT NULL
-                            )
-                        ''')
-                        cursor = db.cursor()
-                        for row in data_to_insert:
-                            cursor.execute("INSERT INTO movie (link, frames, slug) VALUES (?, ?, ?)", row)
-                        db.commit()
+                    #     data_to_insert = [
+                    #         ('http://example.com/movie1', frame_cnt, 'movie-1-slug'),
+                    #     ]
+                    #     print('JEWELLS', frame_cnt)
+                    #     db = get_db()
+                    #     db.execute('''
+                    #         CREATE TABLE IF NOT EXISTS movie (
+                    #             id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    #             link TEXT NOT NULL,
+                    #             frames INTEGER NOT NULL,
+                    #             slug TEXT NOT NULL
+                    #         )
+                    #     ''')
+                    #     cursor = db.cursor()
+                    #     for row in data_to_insert:
+                    #         cursor.execute("INSERT INTO movie (link, frames, slug) VALUES (?, ?, ?)", row)
+                    #     db.commit()
 
-                        # resk=cursor.execute('SELECT link, frames, slug FROM movie')
-                        # print('resk.fetchall()', resk.fetchall())
-                    else:
-                        return jsonify({'error': 'Failed to send POST request to the target URL'}), 500
-                    # response.raise_for_status()
-                    # redirect(url_for('index.html', alert_message='Alert'))
-                    # response.raise_for_status()
+                    #     # resk=cursor.execute('SELECT link, frames, slug FROM movie')
+                    #     # print('resk.fetchall()', resk.fetchall())
+                    # else:
+                    #     return jsonify({'error': 'Failed to send POST request to the target URL'}), 500
+                    # # response.raise_for_status()
+                    # # redirect(url_for('index.html', alert_message='Alert'))
+                    # # response.raise_for_status()
                 except requests.exceptions.RequestException as e:
                     return f"Error sending callback: {str(e)}"
                 # toaster.show_toast(title='Alert', msg=f"Following elements is not detected:- {', '.join(not_Detected)}", duration=3)
