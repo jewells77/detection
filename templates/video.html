@@ -4,36 +4,41 @@
     <title>Page with Data</title>
   </head>
   <body>
+  <h1>JEWELLS</h1>
+
     <div id="data-container">Data will be loaded here.</div>
-    <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        // Function to make a POST request
-        const fetchData = async () => {
-          try {
-            const response = await fetch('http://127.0.0.1:5000/video', {
-              method: 'GET',
-            });
+  <script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Function to make a GET request
+    const fetchData = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:5000/videodata', {
+          method: 'GET',
+        });
 
-            if (response.ok) {
-              const data = await response.json();
-              displayData(data);
-            } else {
-              throw new Error('Request failed');
-            }
-          } catch (error) {
-            console.error('Error:', error);
-          }
-        };
+        if (response.ok) {
+          const data = await response.json();
+          displayData(data);
+        } else {
+          throw new Error('Request failed');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    };
 
-        // Function to display the received data
-        const displayData = (data) => {
-          const dataContainer = document.getElementById('data-container');
-          dataContainer.textContent = JSON.stringify(data, null, 2); // Display the data in a readable format
-        };
+    // Function to display the received data
+    const displayData = (data) => {
+      const dataContainer = document.getElementById('data-container');
+      dataContainer.textContent = JSON.stringify(data, null, 2); // Display the data in a readable format
+    };
 
-        // Call the fetchData function on page load
-        fetchData();
-      });
-    </script>
-  </body>
+    // Call the fetchData function on page load
+    fetchData();
+
+    // Fetch data every 5 seconds
+    setInterval(fetchData, 5000); // 5000 milliseconds = 5 seconds
+  });
+</script>
+</body>
 </html>

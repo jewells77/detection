@@ -12,15 +12,14 @@ from HGGS_detector import *
 from Vest_detector import *
 import sqlite3
 
-
 app = Flask(__name__)
 
 # Configuration for your SQLite database
 DATABASE = 'demoSQL.db'  # Change 'your_database.db' to your desired database name
 app.config['DATABASE'] = DATABASE
 
-
 COLORS = [(255, 255, 0), (0, 255, 0), (0, 255, 255)]
+
 
 def get_db():
     if 'db' not in g:
@@ -28,16 +27,19 @@ def get_db():
         g.db.row_factory = sqlite3.Row
     return g.db
 
+
 @app.teardown_appcontext
 def close_db(error):
     if 'db' in g:
         g.db.close()
+
 
 def init_db():
     db = get_db()
     with app.open_resource('schema.sql', mode='r') as f:
         db.cursor().executescript(f.read())
     db.commit()
+
 
 def is_wearing_items(person_boxes, item_boxes):
     left_p, top_p, width_p, height_p = person_boxes
@@ -60,11 +62,21 @@ def upload_page():
     return render_template('upload.html')
 
 
-@app.route('/video')
-def video_page():
+@app.route('/<name>')
+def video_page(name):
+    return render_template('video.html')
+
+
+# /blog/:[id]
+# @app.route('/video')
+# def video_page_B():
+#     return render_template('video.html')
+
+@app.route('/videodata')
+def video_page_C():
     db = get_db()
     cursor = db.cursor()
-    resk=cursor.execute('SELECT link, frames, slug FROM movie')
+    resk = cursor.execute('SELECT link, frames, slug FROM movie')
     # print('resk.fetchall()', resk.fetchall())
     rows = resk.fetchall()
     # Convert the data to a list of dictionaries
@@ -77,6 +89,7 @@ def video_page():
 def ppe_detection():
     video_file = request.files['video']
     # Access the callback URL from the form submission
+    print('request.form',request.form)
     callback_url = request.form['callback_url']
     is_cuda = request.form.get('cuda', 'Not Cuda')
     video_path = r'video_save\uploaded_video.mp4'
@@ -209,7 +222,7 @@ def ppe_detection():
                         data_to_insert = [
                             ('http://example.com/movie1', frame_cnt, 'movie-1-slug'),
                         ]
-                        print('JEWELLS',frame_cnt)
+                        print('JEWELLS', frame_cnt)
                         db = get_db()
                         db.execute('''
                             CREATE TABLE IF NOT EXISTS movie (
@@ -223,9 +236,9 @@ def ppe_detection():
                         for row in data_to_insert:
                             cursor.execute("INSERT INTO movie (link, frames, slug) VALUES (?, ?, ?)", row)
                         db.commit()
-                            
-                            # resk=cursor.execute('SELECT link, frames, slug FROM movie')
-                            # print('resk.fetchall()', resk.fetchall())
+
+                        # resk=cursor.execute('SELECT link, frames, slug FROM movie')
+                        # print('resk.fetchall()', resk.fetchall())
                     else:
                         return jsonify({'error': 'Failed to send POST request to the target URL'}), 500
                     # response.raise_for_status()
