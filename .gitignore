@@ -2,3 +2,4 @@ __pycache__
 Alert
 detection_env
 video_save
+*.mp4

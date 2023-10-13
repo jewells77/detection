@@ -75,12 +75,7 @@
   <body>
     <div class="form-container">
       <h1>Upload a Video</h1>
-      <form
-        id="upload-form"
-        action="/ppe_detection"
-        method="POST"
-        enctype="multipart/form-data"
-      >
+      <form id="upload-form" enctype="multipart/form-data">
         <label for="video">Video File:</label>
         <input type="file" name="video" accept="video/*" required /><br />
         <label for="callback_url">Callback URL:</label>
@@ -96,46 +91,55 @@
         <input type="radio" name="cuda" value="cuda" checked />Yes
         <input type="radio" name="cuda" value="Not cuda" />No
 
-        <input type="submit" value="Upload and Process" />
+        <input type="button" id="submit-button" value="Upload and Process" />
       </form>
     </div>
 
     <!-- Include jQuery and Bootstrap JavaScript -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
     <script>
-      $(document).ready(function () {
+      document.addEventListener('DOMContentLoaded', function () {
+        const submitButton = document.getElementById('submit-button');
+
         // Intercept the form submission and make an API call
-        $('upload-form').submit(function (event) {
+        submitButton.addEventListener('click', function (event) {
           event.preventDefault(); // Prevent the form from submitting in the traditional way
-          var formData = new FormData(this);
+
+          // Create a FormData object for the form
+          var formData = new FormData();
+
+          // Get the video file and callback URL
+          var videoFile = document.querySelector('input[name="video"]')
+            .files[0];
+          var callbackUrl = document.getElementById('callback-url').value;
+          console.log('videoFile', videoFile);
+          console.log('callbackUrl', callbackUrl);
           // Append the video file and callback URL to the FormData object
-          var videoFile = $('video')[0].files[0];
-          var callbackUrl = $('callback-url').val();
           formData.append('video', videoFile);
           formData.append('callback_url', callbackUrl);
-          // Convert the data to JSON format
-          var jsonData = JSON.stringify(formData);
+
+          // Convert the FormData to JSON (if needed)
+          // Note: FormData can be used directly for file uploads, but if you need JSON, you can convert it to JSON here.
+          console.log('formData', formData);
+          // Make an AJAX request
           $.ajax({
             url: 'http://127.0.0.1:5000/ppe_detection',
             type: 'POST',
-            data: jsonData,
-            contentType: 'application/json',
+            data: formData,
+            processData: false, // Prevent jQuery from processing the data
+            contentType: false, // Prevent jQuery from setting the content type
             success: function (response) {
-              // Handle the response from the API here, e.g., show a success message
-              console.log(response);
-
-              // Open another URL with the data
-              var newUrl = 'http://127.0.0.1:5000/video';
-              window.open(newUrl, '_blank');
+              console.log('response', response);
             },
             error: function (error) {
               // Handle errors here
               console.error(error.responseText);
-              alert('Error processing the video.');
             },
           });
+
+          // Open a new window with the callback URL
+          window.open(callbackUrl, '_blank');
         });
       });
     </script>
