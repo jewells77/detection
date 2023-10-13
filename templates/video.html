@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Page with Data</title>
+  </head>
+  <body>
+    <div id="data-container">Data will be loaded here.</div>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        // Function to make a POST request
+        const fetchData = async () => {
+          try {
+            const response = await fetch('http://127.0.0.1:5000/video', {
+              method: 'GET',
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              displayData(data);
+            } else {
+              throw new Error('Request failed');
+            }
+          } catch (error) {
+            console.error('Error:', error);
+          }
+        };
+
+        // Function to display the received data
+        const displayData = (data) => {
+          const dataContainer = document.getElementById('data-container');
+          dataContainer.textContent = JSON.stringify(data, null, 2); // Display the data in a readable format
+        };
+
+        // Call the fetchData function on page load
+        fetchData();
+      });
+    </script>
+  </body>
+</html>
