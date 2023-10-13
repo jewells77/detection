@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+        function openInNewTab(url) {
+            var win = window.open(url, '_blank');
+            if (win) {
+                win.focus();
+            }
+        }
+        window.onload = function() {
+            var newUrl = '{{ new_url }}';
+            openInNewTab(newUrl);
+        }
+    </script>
+</head>
+<body>
+    <!-- You can add content here if

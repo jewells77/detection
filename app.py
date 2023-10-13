@@ -1,20 +1,43 @@
 import os
 import requests
-from flask import Flask, request, jsonify, render_template, redirect, url_for, session
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session, g
 import json
 import cv2
 import time
 import sys
 import calendar
 import datetime
-from win10toast import ToastNotifier
+# from win10toast import ToastNotifier
 from HGGS_detector import *
 from Vest_detector import *
+import sqlite3
+
 
 app = Flask(__name__)
 
+# Configuration for your SQLite database
+DATABASE = 'demoSQL.db'  # Change 'your_database.db' to your desired database name
+app.config['DATABASE'] = DATABASE
+
+
 COLORS = [(255, 255, 0), (0, 255, 0), (0, 255, 255)]
 
+def get_db():
+    if 'db' not in g:
+        g.db = sqlite3.connect('demoSQL.db')
+        g.db.row_factory = sqlite3.Row
+    return g.db
+
+@app.teardown_appcontext
+def close_db(error):
+    if 'db' in g:
+        g.db.close()
+
+def init_db():
+    db = get_db()
+    with app.open_resource('schema.sql', mode='r') as f:
+        db.cursor().executescript(f.read())
+    db.commit()
 
 def is_wearing_items(person_boxes, item_boxes):
     left_p, top_p, width_p, height_p = person_boxes
@@ -35,6 +58,18 @@ def callback():
 @app.route('/')
 def upload_page():
     return render_template('upload.html')
+
+
+@app.route('/video')
+def video_page():
+    db = get_db()
+    cursor = db.cursor()
+    resk=cursor.execute('SELECT link, frames, slug FROM movie')
+    # print('resk.fetchall()', resk.fetchall())
+    rows = resk.fetchall()
+    # Convert the data to a list of dictionaries
+    data = [{'link': row['link'], 'frames': row['frames'], 'slug': row['slug']} for row in rows]
+    return jsonify(data)
 
 
 # Main function
@@ -169,7 +204,28 @@ def ppe_detection():
                     if response.status_code == 200:
                         # If the response status code is 200, redirect to another URL in the browser
                         # return render_template('index.html', redirect_url='https://example.com/success')
-                        return render_template('index.html', redirect_url='http://127.0.0.1:5000/callback')
+                        # return render_template('index.html', redirect_url='http://127.0.0.1:5000/callback')
+
+                        data_to_insert = [
+                            ('http://example.com/movie1', frame_cnt, 'movie-1-slug'),
+                        ]
+                        print('JEWELLS',frame_cnt)
+                        db = get_db()
+                        db.execute('''
+                            CREATE TABLE IF NOT EXISTS movie (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                link TEXT NOT NULL,
+                                frames INTEGER NOT NULL,
+                                slug TEXT NOT NULL
+                            )
+                        ''')
+                        cursor = db.cursor()
+                        for row in data_to_insert:
+                            cursor.execute("INSERT INTO movie (link, frames, slug) VALUES (?, ?, ?)", row)
+                        db.commit()
+                            
+                            # resk=cursor.execute('SELECT link, frames, slug FROM movie')
+                            # print('resk.fetchall()', resk.fetchall())
                     else:
                         return jsonify({'error': 'Failed to send POST request to the target URL'}), 500
                     # response.raise_for_status()
@@ -180,7 +236,6 @@ def ppe_detection():
                 # toaster.show_toast(title='Alert', msg=f"Following elements is not detected:- {', '.join(not_Detected)}", duration=3)
             print(detected_items)
             print(not_Detected)
-
         result = {}
         person_data = []
         for p_index, person in enumerate(person_class, 1):

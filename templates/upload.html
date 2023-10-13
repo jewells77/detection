@@ -1,86 +1,103 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Video Upload</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ url_for('static', filename='css/styles.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
-        /* Add CSS styles for your form here */
-        body {
-            background-color: #f2f2f2; /* Set the background color to a light gray */
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center; /* Center horizontally */
-            align-items: center; /* Center vertically */
-            height: 100vh; /* Set the container to full viewport height */
-        }
+      /* Add CSS styles for your form here */
+      body {
+        background-color: #f2f2f2; /* Set the background color to a light gray */
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center; /* Center horizontally */
+        align-items: center; /* Center vertically */
+        height: 100vh; /* Set the container to full viewport height */
+      }
 
-        /* Style the form container */
-        .form-container {
-            background-color: #ffffff; /* Set the background color of the form container to white */
-            width: 400px;
-            margin: 0 auto;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
+      /* Style the form container */
+      .form-container {
+        background-color: #ffffff; /* Set the background color of the form container to white */
+        width: 400px;
+        margin: 0 auto;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
 
-        /* Style form elements */
-        label {
-            display: block;
-            margin-bottom: 10px;
-        }
+      /* Style form elements */
+      label {
+        display: block;
+        margin-bottom: 10px;
+      }
 
-        input[type="file"],
-        input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 20px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            font-size: 16px;
-        }
+      input[type='file'],
+      input[type='text'] {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        font-size: 16px;
+      }
 
-        input[type="radio"] {
-            margin-right: 10px;
-        }
+      input[type='radio'] {
+        margin-right: 10px;
+      }
 
-        input[type="submit"] {
-            background-color: #007bff; /* Set the background color of the submit button to blue */
-            color: #fff;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 3px;
-            margin-left: 20px;
-            font-size: 18px;
-            cursor: pointer;
-        }
+      input[type='submit'] {
+        background-color: #007bff; /* Set the background color of the submit button to blue */
+        color: #fff;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 3px;
+        margin-left: 20px;
+        font-size: 18px;
+        cursor: pointer;
+      }
 
-        /* Add hover effect for the submit button */
-        input[type="submit"]:hover {
-            background-color: #0056b3; /* Darker blue color on hover */
-        }
+      /* Add hover effect for the submit button */
+      input[type='submit']:hover {
+        background-color: #0056b3; /* Darker blue color on hover */
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="form-container">
-        <h1>Upload a Video</h1>
-        <form id="upload-form" action="/ppe_detection" method="POST" enctype="multipart/form-data">
-            <label for="video">Video File:</label>
-            <input type="file" name="video" accept="video/*" required><br>
-            <label for="callback_url">Callback URL:</label>
-            <input type="text" name="callback_url" id="callback-url" required><br>
+      <h1>Upload a Video</h1>
+      <form
+        id="upload-form"
+        action="/ppe_detection"
+        method="POST"
+        enctype="multipart/form-data"
+      >
+        <label for="video">Video File:</label>
+        <input type="file" name="video" accept="video/*" required /><br />
+        <label for="callback_url">Callback URL:</label>
+        <input
+          type="text"
+          name="callback_url"
+          id="callback-url"
+          required
+        /><br />
 
-            <!-- Radio buttons for CUDA selection -->
-            <label for="Not cuda">Use CUDA:</label>
-            <input type="radio" name="cuda" value="cuda" checked>Yes
-            <input type="radio" name="cuda" value="Not cuda">No
+        <!-- Radio buttons for CUDA selection -->
+        <label for="Not cuda">Use CUDA:</label>
+        <input type="radio" name="cuda" value="cuda" checked />Yes
+        <input type="radio" name="cuda" value="Not cuda" />No
 
-            <input type="submit" value="Upload and Process">
-        </form>
+        <input type="submit" value="Upload and Process" />
+      </form>
     </div>
 
     <!-- Include jQuery and Bootstrap JavaScript -->
@@ -88,37 +105,39 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
     <script>
-        $(document).ready(function () {
-            // Intercept the form submission and make an API call
-            $("upload-form").submit(function (event) {
-                event.preventDefault(); // Prevent the form from submitting in the traditional way
-                var formData = new FormData(this);
-                // Append the video file and callback URL to the FormData object
-                var videoFile = $("video")[0].files[0];
-                var callbackUrl = $("callback-url").val();
-                formData.append("video", videoFile);
-                formData.append("callback_url", callbackUrl);
+      $(document).ready(function () {
+        // Intercept the form submission and make an API call
+        $('upload-form').submit(function (event) {
+          event.preventDefault(); // Prevent the form from submitting in the traditional way
+          var formData = new FormData(this);
+          // Append the video file and callback URL to the FormData object
+          var videoFile = $('video')[0].files[0];
+          var callbackUrl = $('callback-url').val();
+          formData.append('video', videoFile);
+          formData.append('callback_url', callbackUrl);
+          // Convert the data to JSON format
+          var jsonData = JSON.stringify(formData);
+          $.ajax({
+            url: 'http://127.0.0.1:5000/ppe_detection',
+            type: 'POST',
+            data: jsonData,
+            contentType: 'application/json',
+            success: function (response) {
+              // Handle the response from the API here, e.g., show a success message
+              console.log(response);
 
-                $.ajax({
-                    url: "http://127.0.0.1:5000/ppe_detection",
-                    type: "POST",
-                    data: formData,
-                    processData: false, // Important: prevent jQuery from processing the data
-                    contentType: false, // Important: let the server know it's a multipart/form-data request
-                    success: function (response) {
-                        // Handle the response from the API here, e.g., show a success message
-                        console.log(response);
-                        alert("Video processing complete.");
-                    },
-                    error: function (error) {
-                        // Handle errors here
-                        console.error(error.responseText);
-                        alert("Error processing the video.");
-                    }
-                });
-            });
+              // Open another URL with the data
+              var newUrl = 'http://127.0.0.1:5000/video';
+              window.open(newUrl, '_blank');
+            },
+            error: function (error) {
+              // Handle errors here
+              console.error(error.responseText);
+              alert('Error processing the video.');
+            },
+          });
         });
+      });
     </script>
-
-</body>
+  </body>
 </html>
