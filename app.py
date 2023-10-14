@@ -228,8 +228,8 @@ def ppe_detection():
                     # ''')
                     cursor = db.cursor()
                     for row in data_to_insert:
-                        print(row)
-                        cursor.execute("INSERT INTO frame (frames, img_path) VALUES (?, ?)", (row,alert_image_path))
+                        path_with_forwardslashes = alert_image_path.replace("\\", "/")
+                        cursor.execute("INSERT INTO frame (frames, img_path) VALUES (?, ?)", (row,path_with_forwardslashes))
                     db.commit()
                     # I HAVE COMMENTED OUT BECAUSE WE HAVE USED DYNAMIC URL
                     

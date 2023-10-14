@@ -4,41 +4,105 @@
     <title>Page with Data</title>
   </head>
   <body>
-  <h1>Result</h1>
+    <h1>Result</h1>
 
     <div id="data-container">Data will be loaded here.</div>
-  <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    // Function to make a GET request
-    const fetchData = async () => {
-      try {
-        const response = await fetch('http://127.0.0.1:5000/videodata', {
-          method: 'GET',
-        });
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        // Function to make a GET request
+        const fetchData = async () => {
+          try {
+            const response = await fetch('http://127.0.0.1:5000/videodata', {
+              method: 'GET',
+            });
 
-        if (response.ok) {
-          const data = await response.json();
-          displayData(data);
-        } else {
-          throw new Error('Request failed');
-        }
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    };
+            if (response.ok) {
+              const data = await response.json();
+              displayData(data);
+            } else {
+              throw new Error('Request failed');
+            }
+          } catch (error) {
+            console.error('Error:', error);
+          }
+        };
 
-    // Function to display the received data
-    const displayData = (data) => {
-      const dataContainer = document.getElementById('data-container');
-      dataContainer.textContent = JSON.stringify(data, null, 2); // Display the data in a readable format
-    };
+        // FOR LAST ELEMENT ONLY
+        const displayData = (data) => {
+          const dataContainer = document.getElementById('data-container');
 
-    // Call the fetchData function on page load
-    fetchData();
+          // Clear the container before adding the last element
+          dataContainer.innerHTML = '';
 
-    // Fetch data every 5 seconds
-    setInterval(fetchData, 5000); // 5000 milliseconds = 5 seconds
-  });
-</script>
-</body>
+          // Check if the data array is not empty
+          if (data.length > 0) {
+            const lastItem = data[data.length - 1]; // Get the last item in the array
+
+            // Create a div for the last item
+            const div = document.createElement('div');
+
+            // Check if the last item has an image property
+            if (lastItem.img_path) {
+              // Create an image element and set its source
+              const img = document.createElement('img');
+              img.src = lastItem.img_path;
+              // Append the image to the div
+              div.appendChild(img);
+            }
+
+            // Create a paragraph element for text data (you can modify this part based on your data structure)
+            const p = document.createElement('p');
+            p.textContent = lastItem.text;
+
+            // Append the paragraph to the div
+            div.appendChild(p);
+
+            // Append the div to the data container
+            dataContainer.appendChild(div);
+          }
+        };
+
+        // FOR EVERY ELEMENT
+        // Function to display the received data
+        // const displayData = (data) => {
+        //   const dataContainer = document.getElementById('data-container');
+
+        //   // Clear the container before adding new elements
+        //   dataContainer.innerHTML = '';
+
+        //   // Loop through the array
+        //   data.forEach((item) => {
+        //     console.log('item', item);
+        //     // Create a div for each item
+        //     const div = document.createElement('div');
+
+        //     // Check if the item has an image property
+        //     if (item.img_path) {
+        //       // Create an image element and set its source
+        //       const img = document.createElement('img');
+        //       img.src = item.img_path;
+        //       // Append the image to the div
+        //       div.appendChild(img);
+        //     }
+
+        //     // Create a paragraph element for text data (you can modify this part based on your data structure)
+        //     const p = document.createElement('p');
+        //     p.textContent = item.text;
+
+        //     // Append the paragraph to the div
+        //     div.appendChild(p);
+
+        //     // Append the div to the data container
+        //     dataContainer.appendChild(div);
+        //   });
+        // };
+
+        // Call the fetchData function on page load
+        fetchData();
+
+        // Fetch data every 5 seconds
+        setInterval(fetchData, 5000); // 5000 milliseconds = 5 seconds
+      });
+    </script>
+  </body>
 </html>
