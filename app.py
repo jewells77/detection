@@ -7,7 +7,6 @@ import time
 import sys
 import calendar
 import datetime
-# from win10toast import ToastNotifier
 from HGGS_detector import *
 from Vest_detector import *
 from flask_cors import CORS
@@ -16,7 +15,7 @@ import sqlite3
 app = Flask(__name__)
 cors = CORS(app)
 # Configuration for your SQLite database
-DATABASE = 'demoSQL.db'  # Change 'your_database.db' to your desired database name
+DATABASE = 'demoSQL.db'
 app.config['DATABASE'] = DATABASE
 
 COLORS = [(255, 255, 0), (0, 255, 0), (0, 255, 255)]
@@ -26,20 +25,27 @@ def get_db():
     if 'db' not in g:
         g.db = sqlite3.connect('demoSQL.db')
         g.db.row_factory = sqlite3.Row
+        g.db.execute('''
+                                    CREATE TABLE IF NOT EXISTS frame (
+                                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                        frames INTEGER NOT NULL,
+                                        img_path TEXT NOT NULL
+                                    )
+                                ''')
     return g.db
 
 
-@app.teardown_appcontext
-def close_db(error):
-    if 'db' in g:
-        g.db.close()
-
-
-def init_db():
-    db = get_db()
-    with app.open_resource('schema.sql', mode='r') as f:
-        db.cursor().executescript(f.read())
-    db.commit()
+# @app.teardown_appcontext
+# def close_db(error):
+#     if 'db' in g:
+#         g.db.close()
+#
+#
+# def init_db():
+#     db = get_db()
+#     with app.open_resource('schema.sql', mode='r') as f:
+#         db.cursor().executescript(f.read())
+#     db.commit()
 
 
 def is_wearing_items(person_boxes, item_boxes):
@@ -53,9 +59,9 @@ def is_wearing_items(person_boxes, item_boxes):
         return False
 
 
-@app.route('/callback', methods=['POST', 'GET'])
-def callback():
-    return render_template('index.html')
+# @app.route('/callback', methods=['POST', 'GET'])
+# def callback():
+#     return render_template('index.html')
 
 
 @app.route('/')
@@ -65,6 +71,7 @@ def upload_page():
 
 @app.route('/<name>')
 def video_page(name):
+    print('Vishal:- ', name)
     return render_template('video.html')
 
 
@@ -76,12 +83,12 @@ def video_page(name):
 @app.route('/videodata')
 def video_page_C():
     db = get_db()
+
     cursor = db.cursor()
-    resk = cursor.execute('SELECT link, frames, slug FROM movie')
-    # print('resk.fetchall()', resk.fetchall())
+    resk = cursor.execute('SELECT frames, img_path FROM frame')
     rows = resk.fetchall()
     # Convert the data to a list of dictionaries
-    data = [{'link': row['link'], 'frames': row['frames'], 'slug': row['slug']} for row in rows]
+    data = [{'frames': row['frames'], 'img_path': row['img_path']} for row in rows]
     return jsonify(data)
 
 
@@ -103,8 +110,6 @@ def ppe_detection():
     if not callback_url:
         return jsonify({'error': 'No callback URL provided'}), 400
 
-    # Now you have access to the video file and callback URL, and you can proceed with processing
-    # For example, you can save the video file and print the callback URL
     print(f'Callback URL: {callback_url}')
     # # if __name__== "__main__":
     # parameters = request.get_json()
@@ -127,7 +132,6 @@ def ppe_detection():
     classes = ["vest", "shoes", "helmet", "gloves", "glasses"]
     # capture = cv2.VideoCapture(parameters[0])
     # capture = cv2.VideoCapture("input_files/" + parameters.get("input_source"))
-    total_frame = capture.get(cv2.CAP_PROP_FPS)
     if not capture.isOpened():
         print("Cannot open video file")
         sys.exit()
@@ -143,17 +147,15 @@ def ppe_detection():
     utc_time = calendar.timegm(date.utctimetuple())
     output_file_name = "output_" + str(utc_time) + ".mp4"
     output = cv2.VideoWriter(output_file_name, cv2.VideoWriter_fourcc(*'MP4V'), 20, size)
-    # toaster = ToastNotifier()
     # Initialize calculating FPS
-    # start = time.time_ns()
     frame_count = 0
     frame_cnt = 0
     # fps = -1
     cnt = 0
     sec = 0
     final_json = []
-    alert_image = os.getcwd() + os.sep + 'Alert'
-    os.makedirs(alert_image, exist_ok=True)
+    alert_image = 'static'+os.sep+'images'
+    # os.makedirs(alert_image, exist_ok=True)
     while True:
         # Read a new frame
         ok, frame = capture.read()
@@ -215,21 +217,19 @@ def ppe_detection():
                 try:
                     print('callback_url', callback_url)
                     data_to_insert = [
-                        ('http://example.com/movie1', frame_cnt, 'movie-1-slug'),
+                        (frame_cnt),
                     ]
-                    print('JEWELLS', frame_cnt)
                     db = get_db()
-                    db.execute('''
-                        CREATE TABLE IF NOT EXISTS movie (
-                            id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            link TEXT NOT NULL,
-                            frames INTEGER NOT NULL,
-                            slug TEXT NOT NULL
-                        )
-                    ''')
+                    # db.execute('''
+                    #     CREATE TABLE IF NOT EXISTS frame (
+                    #         id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    #         frames INTEGER NOT NULL
+                    #     )
+                    # ''')
                     cursor = db.cursor()
                     for row in data_to_insert:
-                        cursor.execute("INSERT INTO movie (link, frames, slug) VALUES (?, ?, ?)", row)
+                        print(row)
+                        cursor.execute("INSERT INTO frame (frames, img_path) VALUES (?, ?)", (row,alert_image_path))
                     db.commit()
                     # I HAVE COMMENTED OUT BECAUSE WE HAVE USED DYNAMIC URL
                     
@@ -242,7 +242,6 @@ def ppe_detection():
                     #     data_to_insert = [
                     #         ('http://example.com/movie1', frame_cnt, 'movie-1-slug'),
                     #     ]
-                    #     print('JEWELLS', frame_cnt)
                     #     db = get_db()
                     #     db.execute('''
                     #         CREATE TABLE IF NOT EXISTS movie (
@@ -266,7 +265,6 @@ def ppe_detection():
                     # # response.raise_for_status()
                 except requests.exceptions.RequestException as e:
                     return f"Error sending callback: {str(e)}"
-                # toaster.show_toast(title='Alert', msg=f"Following elements is not detected:- {', '.join(not_Detected)}", duration=3)
             print(detected_items)
             print(not_Detected)
         result = {}
